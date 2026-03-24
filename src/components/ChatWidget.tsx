@@ -2,12 +2,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Bot, Loader2 } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const API_KEY = process.env.GEMINI_API_KEY;
+const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'model'; text: string }[]>([
-    { role: 'model', text: 'Hello! I am the SAHAL support AI. How can I help you with your bookings or travel plans today?' }
+    { role: 'model', text: API_KEY
+      ? 'Hello! I am the SAHAL support AI. How can I help you with your bookings or travel plans today?'
+      : 'Hello! I am the SAHAL support assistant. For AI-powered support, please contact us at +44 796 967 293.'
+    }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -15,7 +19,7 @@ export default function ChatWidget() {
   const chatRef = useRef<any>(null);
 
   useEffect(() => {
-    if (!chatRef.current) {
+    if (!chatRef.current && ai) {
       chatRef.current = ai.chats.create({
         model: 'gemini-3-flash-preview',
         config: {
@@ -43,11 +47,21 @@ export default function ChatWidget() {
     setIsLoading(true);
 
     try {
-      const response = await chatRef.current.sendMessage({ message: userMessage });
-      setMessages(prev => [...prev, { role: 'model', text: response.text }]);
+      if (!ai || !chatRef.current) {
+        // Fallback response when AI is not available
+        setTimeout(() => {
+          setMessages(prev => [...prev, {
+            role: 'model',
+            text: 'Thank you for your message! For personalized assistance, please contact our support team at +44 796 967 293 or visit our help center.'
+          }]);
+        }, 1000);
+      } else {
+        const response = await chatRef.current.sendMessage({ message: userMessage });
+        setMessages(prev => [...prev, { role: 'model', text: response.text }]);
+      }
     } catch (error) {
       console.error('Chat error:', error);
-      setMessages(prev => [...prev, { role: 'model', text: 'Sorry, I encountered an error while trying to respond. Please try again later.' }]);
+      setMessages(prev => [...prev, { role: 'model', text: 'Sorry, I encountered an error while trying to respond. Please contact support at +44 796 967 293.' }]);
     } finally {
       setIsLoading(false);
     }

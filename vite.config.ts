@@ -6,6 +6,7 @@ import {defineConfig, loadEnv} from 'vite';
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
+    base: process.env.NODE_ENV === 'production' ? '/Anas-Salah/' : '/',
     plugins: [react(), tailwindcss()],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
@@ -13,6 +14,19 @@ export default defineConfig(({mode}) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
+      },
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Split large dependencies into separate chunks
+            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+            'ui-vendor': ['lucide-react', 'motion'],
+            'qr-vendor': ['@yudiel/react-qr-scanner', 'react-qr-code'],
+            'ai-vendor': ['@google/genai'],
+          },
+        },
       },
     },
     server: {
