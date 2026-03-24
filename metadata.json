@@ -1,0 +1,7 @@
+{
+  "name": "Sahal Booking",
+  "description": "Flight and bus booking application with QR tickets and scanning.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
